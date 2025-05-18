@@ -1,9 +1,11 @@
-# client/Dockerfile
 FROM node:18
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
+
+ENV NODE_ENV=development
+
 RUN npm install
 
 COPY . .
