@@ -1,22 +1,20 @@
 // server.js
+require('dotenv').config();  // Load environment variables first
+
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api');
 
 const app = express();
-const PORT = process.env.PORT || 3000;  
+const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
+// Connect to MongoDB before starting the server
 connectDB();
 
-// Enable CORS for specific origin
-// app.use(cors({ 
-//   origin: ["*"],
-// }));
 app.use(cors());
 
-// Middleware
+// Middleware to parse JSON
 app.use(express.json());
 
 // API routes
