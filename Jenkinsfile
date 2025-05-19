@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_NAME = "crudapp"  // Your project name here
-        COMPOSE_FILE = "docker-compose.yml"  // Assuming docker-compose.yml is in repo root
+        PROJECT_NAME = "crudapp"
+        COMPOSE_FILE = "docker-compose-part2.yml" // This should match your part 2 filename
     }
 
     stages {
@@ -13,7 +13,13 @@ pipeline {
             }
         }
 
-        stage('Build Docker Containers') {
+        stage('Stop Existing Containers') {
+            steps {
+                sh "docker-compose -p ${PROJECT_NAME} -f ${COMPOSE_FILE} down"
+            }
+        }
+
+        stage('Build and Run Docker Containers') {
             steps {
                 sh "docker-compose -p ${PROJECT_NAME} -f ${COMPOSE_FILE} up -d --build"
             }
