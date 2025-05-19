@@ -5,7 +5,7 @@ services:
     build: ./server
     container_name: express-api
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
       - MONGO_URI=mongodb+srv://iamnajamal:LSPKhxLQMtqJ5KS3@cluster0.nehazya.mongodb.net/crudapp
     volumes:
@@ -16,7 +16,7 @@ services:
     build: ./client
     container_name: react-client
     ports:
-      - "5174:5173"
+      - "5173:5173"
     depends_on:
       - server
     # Remove this volume line to keep container's node_modules intact
