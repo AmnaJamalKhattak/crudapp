@@ -18,31 +18,28 @@ def driver():
     """
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--headless")  # Run in headless mode for Docker
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_experimental_option("detach", True)  # Keep browser open
 
     try:
-        # Initialize WebDriver using the installed ChromeDriver
-        driver = webdriver.Chrome(options=chrome_options)
-        driver.implicitly_wait(10)
+        # Initialize WebDriver
+        service = Service()
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         yield driver
-    except Exception as e:
-        print(f"Error initializing WebDriver: {str(e)}")
-        raise
     finally:
-        if 'driver' in locals():
-            driver.quit()
+        driver.quit()
 
 @pytest.fixture(scope="session")
 def base_url():
-    """Fixture to provide the base URL for the frontend application."""
-    return "http://localhost:5173"  # Frontend Vite development server URL
+    """Get the base URL for the frontend application."""
+    return os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 @pytest.fixture(scope="session")
 def api_url():
-    """Fixture to provide the API URL for direct API testing."""
-    return "http://localhost:3000/api"  # Backend API URL
+    """Get the base URL for the backend API."""
+    return os.getenv("BACKEND_URL", "http://localhost:3000/api")
 
 @pytest.fixture
 def test_data():

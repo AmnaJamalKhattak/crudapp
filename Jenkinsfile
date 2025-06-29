@@ -2,33 +2,82 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_NAME = "crudapp"
-        COMPOSE_FILE = "docker-compose-part2.yml" // This should match your part 2 filename
+        DOCKER_IMAGE = 'selenium-test-runner'
+        DOCKER_CONTAINER = 'selenium-test-container'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/AmnaJamalKhattak/crudapp.git'
+                // Clean workspace before checking out
+                cleanWs()
+                // Checkout code from Git
+                checkout scm
             }
         }
 
-        stage('Stop Existing Containers') {
+        stage('Build Test Image') {
             steps {
-                sh "docker-compose -p ${PROJECT_NAME} -f ${COMPOSE_FILE} down"
+                script {
+                    // Build Docker image for running tests
+                    sh '''
+                        cd selenium_tests
+                        docker build -t ${DOCKER_IMAGE} .
+                    '''
+                }
             }
         }
 
-        stage('Build and Run Docker Containers') {
+        stage('Start Application') {
             steps {
-                sh "docker-compose -p ${PROJECT_NAME} -f ${COMPOSE_FILE} up -d --build"
+                script {
+                    // Start the application containers
+                    sh '''
+                        docker-compose -f docker-compose-part1.yml up -d
+                        # Wait for services to be ready
+                        sleep 30
+                    '''
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    try {
+                        // Run tests in Docker container
+                        sh '''
+                            docker run --name ${DOCKER_CONTAINER} \
+                                --network host \
+                                ${DOCKER_IMAGE}
+                        '''
+                    } finally {
+                        // Always stop and remove the test container
+                        sh '''
+                            docker stop ${DOCKER_CONTAINER} || true
+                            docker rm ${DOCKER_CONTAINER} || true
+                        '''
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Build finished"
+            // Clean up Docker resources
+            script {
+                sh '''
+                    docker-compose -f docker-compose-part1.yml down
+                    docker rmi ${DOCKER_IMAGE} || true
+                '''
+            }
+        }
+        success {
+            echo 'Tests completed successfully!'
+        }
+        failure {
+            echo 'Tests failed! Check the logs for details.'
         }
     }
 }
